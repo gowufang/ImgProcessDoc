@@ -2,11 +2,11 @@
 d:\opencv\build\include\opencv2\core\mat.hpp(1965): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
 d:\opencv\build\include\opencv2\core\persistence.hpp : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
 d:\opencv\build\include\opencv2\core\utility.hpp : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
-c:\users\wu\documents\visual studio 2015\projects\1202thinningimg\1202thinningimg\thinning.h(63): warning C4554: “&”: 检查运算符优先级可能存在的错误；使用圆括号阐明优先级
-c:\users\wu\documents\visual studio 2015\projects\1202thinningimg\1202thinningimg\thinning.h(66): warning C4554: “&”: 检查运算符优先级可能存在的错误；使用圆括号阐明优先级
-c:\users\wu\documents\visual studio 2015\projects\1202thinningimg\1202thinningimg\thinning.h(128): warning C4554: “&”: 检查运算符优先级可能存在的错误；使用圆括号阐明优先级
-c:\users\wu\documents\visual studio 2015\projects\1202thinningimg\1202thinningimg\thinning.h(131): warning C4554: “&”: 检查运算符优先级可能存在的错误；使用圆括号阐明优先级
-c:\users\wu\documents\visual studio 2015\projects\1202thinningimg\1202thinningimg\thinningimg.cpp(718): warning C4244: “=”: 从“short”转换到“char”，可能丢失数据
-c:\users\wu\documents\visual studio 2015\projects\1202thinningimg\1202thinningimg\thinningimg.cpp(1067): warning C4101: “threshold”: 未引用的局部变量
-  1202ThinningImg.vcxproj -> C:\Users\wu\Documents\Visual Studio 2015\Projects\1202ThinningImg\x64\Debug\1202ThinningImg.exe
-  1202ThinningImg.vcxproj -> C:\Users\wu\Documents\Visual Studio 2015\Projects\1202ThinningImg\x64\Debug\1202ThinningImg.pdb (Full PDB)
+d:\0mse1\0fromgit\imgprocessdoc\1202thinningimg\1202thinningimg\thinning.h(63): warning C4554: “&”: 检查运算符优先级可能存在的错误；使用圆括号阐明优先级
+d:\0mse1\0fromgit\imgprocessdoc\1202thinningimg\1202thinningimg\thinning.h(66): warning C4554: “&”: 检查运算符优先级可能存在的错误；使用圆括号阐明优先级
+d:\0mse1\0fromgit\imgprocessdoc\1202thinningimg\1202thinningimg\thinning.h(128): warning C4554: “&”: 检查运算符优先级可能存在的错误；使用圆括号阐明优先级
+d:\0mse1\0fromgit\imgprocessdoc\1202thinningimg\1202thinningimg\thinning.h(131): warning C4554: “&”: 检查运算符优先级可能存在的错误；使用圆括号阐明优先级
+d:\0mse1\0fromgit\imgprocessdoc\1202thinningimg\1202thinningimg\thinningimg.cpp(718): warning C4244: “=”: 从“short”转换到“char”，可能丢失数据
+d:\0mse1\0fromgit\imgprocessdoc\1202thinningimg\1202thinningimg\thinningimg.cpp(1067): warning C4101: “threshold”: 未引用的局部变量
+  1202ThinningImg.vcxproj -> D:\0Mse1\0fromGit\ImgProcessDoc\1202ThinningImg\x64\Debug\1202ThinningImg.exe
+  1202ThinningImg.vcxproj -> D:\0Mse1\0fromGit\ImgProcessDoc\1202ThinningImg\x64\Debug\1202ThinningImg.pdb (Full PDB)

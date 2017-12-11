@@ -6,7 +6,7 @@
 #include "highgui.h"
 #include "cv.h"//包含cvCreateStructuringElementEx();颜色空间转换函数cvCvtColor()需要
 #include "cxcore.h"
-
+#include"opencv2/imgproc/imgproc.hpp"  
 #include <stdlib.h>
 #include <string.h>
 #include "Thinning.h"
@@ -1207,21 +1207,24 @@ int main(int argc, char* argv[])
 	原图像由0到255---->0或255
 	*/
 
+	Mat img = cvarrToMat(src);
+	Mat dst = img;
+	//boxFilter(img, dst, -1, Size(5, 5));
+	//blur(img, dst, Size(7, 7));
+	GaussianBlur(img, dst, Size(5, 5), 0, 0);
 	unsigned int thresValue = Otsu((unsigned char *)src->imageData, src->width, src->height, src->widthStep);
 
 	Thresholding((unsigned char *)src->imageData, src->width, src->height, src->widthStep,
 		thresValue);
 
 
-	//Mat img = cvarrToMat(src);
-	//Mat dst = img;
 
 	//delete_jut(img, dst, 3, 3, 0);//去除二值图像边缘的突出部  
 	//
 
-	////图片边缘光滑处理
+	////平滑处理
 	//imageblur(img, dst, Size(10, 10), thresValue);
-
+	
 	//二值化的图像
 	cvNamedWindow("Threshold", 0);
 	cvShowImage("Threshold", src);
