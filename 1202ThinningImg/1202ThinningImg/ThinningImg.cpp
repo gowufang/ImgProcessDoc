@@ -1,10 +1,10 @@
-//»ùÓÚË÷Òı±íµÄÍ¼ÏñÏ¸»¯Ëã·¨
+ï»¿//åŸºäºç´¢å¼•è¡¨çš„å›¾åƒç»†åŒ–ç®—æ³•
 
 #include <highgui.h>   
 #include <windows.h>   
 #include "contours.h"
 #include "highgui.h"
-#include "cv.h"//°üº¬cvCreateStructuringElementEx();ÑÕÉ«¿Õ¼ä×ª»»º¯ÊıcvCvtColor()ĞèÒª
+#include "cv.h"//åŒ…å«cvCreateStructuringElementEx();é¢œè‰²ç©ºé—´è½¬æ¢å‡½æ•°cvCvtColor()éœ€è¦
 #include "cxcore.h"
 #include"opencv2/imgproc/imgproc.hpp"  
 #include <stdlib.h>
@@ -12,1063 +12,26 @@
 #include "Thinning.h"
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include "ThresholdWithOtsu.h"
+#include "ThinningAlgorithm.h"
+
 using namespace cv;
-//»ùÓÚË÷Òı±íµÄÏ¸»¯Ï¸»¯Ëã·¨
-//¹¦ÄÜ£º¶ÔÍ¼Ïó½øĞĞÏ¸»¯
-//²ÎÊı£ºlpDIBBits£º´ú±íÍ¼ÏóµÄÒ»Î¬Êı×é
-//      lWidth£ºÍ¼Ïó¸ß¶È
-//      lHeight£ºÍ¼Ïó¿í¶È
 
 
-//                           ´ú±íÍ¼ÏóµÄÒ»Î¬Êı×é      Í¼Ïó¿í¶È     Í¼Ïó¸ß¶È
-bool ThiningDIBSkeleton(unsigned char* imagedata, int lWidth, int lHeight)
-{
-	/* 	unsigned char* imagedata;
-	imagedata = new uchar[sizeof(char) * src->width * src->height]();
-	*/
-	/*
-	deletemark[256]ÎªÇ°ÈË¾İ8ÁìÓò×Ü½áµÄÊÇ·ñ¿ÉÒÔ±»É¾³ıµÄ256ÖÖÇé¿ö
-	²»¿ÉÒÔÉ¾³ıÓÃ0À´±íÊ¾£¬ÄÜ±»É¾³ıµÄÓÃ1À´±íÊ¾
-	*/
-	unsigned char deletemark[256] = {
-		0, 0, 0, 0, 0, 0, 0, 1,     0, 0, 1, 1, 0, 0, 1, 1,
-		0, 0, 0, 0, 0, 0, 0, 0,     0, 0, 1, 1, 1, 0, 1, 1,
-		0, 0, 0, 0, 0, 0, 0, 0,     1, 0, 0, 0, 1, 0, 1, 1,
-		0, 0, 0, 0, 0, 0, 0, 0,     1, 0, 1, 1, 1, 0, 1, 1,
-		0, 0, 0, 0, 0, 0, 0, 0,     0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0,     0, 0, 0, 0, 0, 0, 0, 0,
-		0, 0, 0, 0, 0, 0, 0, 0,     1, 0, 0, 0, 1, 0, 1, 1,
-		1, 0, 0, 0, 0, 0, 0, 0,     1, 0, 1, 1, 1, 0, 1, 1,
-		0, 0, 1, 1, 0, 0, 1, 1,     0, 0, 0, 1, 0, 0, 1, 1,
-		0, 0, 0, 0, 0, 0, 0, 0,     0, 0, 0, 1, 0, 0, 1, 1,
-		1, 1, 0, 1, 0, 0, 0, 1,     0, 0, 0, 0, 0, 0, 0, 0,
-		1, 1, 0, 1, 0, 0, 0, 1,     1, 1, 0, 0, 1, 0, 0, 0,
-		0, 1, 1, 1, 0, 0, 1, 1,     0, 0, 0, 1, 0, 0, 1, 1,
-		0, 0, 0, 0, 0, 0, 0, 0,     0, 0, 0, 0, 0, 1, 1, 1,
-		1, 1, 1, 1, 0, 0, 1, 1,     1, 1, 0, 0, 1, 1, 0, 0,
-		1, 1, 1, 1, 0, 0, 1, 1,     1, 1, 0, 0, 1, 1, 0, 0
-	};//Ë÷Òı±í
 
-	  //Ñ­»·±äÁ¿
-	  //long i;
-	  //long j;
 
 
-	unsigned char p0, p1, p2, p3, p4, p5, p6, p7;
 
-	unsigned char *pmid, *vergeMark;    // pmid ÓÃÀ´Ö¸Ïò¶şÖµÍ¼Ïñ  vergeMarkÓÃÀ´Ö¸Ïò´æ·ÅÊÇ·ñÎª±ßÔµ
-
-	unsigned char sum;
-
-	bool bStart = true;
-
-	//¶¯Ì¬´´½¨Ò»¸ö³¤¶ÈÎªsizeof(char) * src->width * src->heightµÄÊı×é
-	//²¢ÇÒ³õÊ¼»¯°ÑÊı×éÔªËØ¶¼ÉèÖÃÎª0
-	//³¤¶ÈÓëimagedata³¤¶ÈÒ»Ñù
-	long lLength;
-	lLength = lWidth * lHeight; //Êı×é³¤¶È
-	unsigned char *pTemp = new uchar[sizeof(unsigned char) * lLength]();
-
-	//    P0 P1 P2
-	//    P7    P3
-	//    P6 P5 P4
-
-	while (bStart)
-	{
-		bStart = false;
-		//Ã¿´ÎÑ­»·pTempËùÓĞÔªËØ¶¼ÖÃ0
-		memset(pTemp, 0, lLength);//³õÊ¼»¯pTempÖ¸ÏòµÄlLength¿Õ¼äÈ«²¿³õÊ¼»¯Îª0
-
-								  /*---------------Ê×ÏÈÇó±ßÔµµã----------------*/
-		pmid = (unsigned char *)imagedata + lWidth + 1; // pmid ÓÃÀ´Ö¸Ïò¶şÖµÍ¼Ïñ¾ØÕóµÄµÚ¶şĞĞ	  +1 ±íÊ¾²»¿¼ÂÇÍ¼ÏñµÚÒ»ĞĞ
-		vergeMark = (unsigned char *)pTemp + lWidth + 1; //pmidtempÓÃÀ´Ö¸Ïò´æ·ÅÊÇ·ñÎª±ßÔµ Èç¹ûÊÇ±ßÔµµã Ôò½«ÆäÉèÎª1
-
-		for (int i = 1; i < lHeight - 1; i++)  //lHeight -1±íÊ¾²»¿¼ÂÇÍ¼Ïñ×îºóÒ»ĞĞ µÚÒ»ÁĞ
-		{
-			for (int j = 1; j < lWidth - 1; j++)  //lWidth - 1±íÊ¾²»¿¼ÂÇÍ¼Ïñ×îºóÒ»ÁĞ
-			{
-				//Í¼ÏñÒÑ¾­ÊÇ01»¯£¬Èç¹ûÊÇ0ÎÒÃÇ²»¿¼ÂÇ
-				if (*pmid == 0)
-				{
-					pmid++;
-					vergeMark++;
-					continue;
-				}
-				//Èç¹ûÊÇ1£¬ÊÇÎÒÃÇ¿¼ÂÇµÄµã ÎÒÃÇĞèÒª¶ÔÖÜÎ§8¸ö½øĞĞÅĞ¶ÏÊÇ·ñ±ßÔµ
-				p0 = *(pmid - lWidth - 1);
-				p1 = *(pmid - lWidth);                  //    P0 P1 P2
-				p2 = *(pmid + 1 - lWidth);              //    P7    P3
-				p3 = *(pmid + 1);						//    P6 P5 P4
-				p4 = *(pmid + lWidth + 1);
-				p5 = *(pmid + lWidth);
-				p6 = *(pmid + lWidth - 1);
-				p7 = *(pmid - 1);
-				//p0--µ½---p7µÄÖµ²»ÊÇ0¾ÍÊÇ1
-				sum = p0 & p1 & p2 & p3 & p4 & p5 & p6 & p7;//Èç¹ûÊÇ±ßÔµ£¬¿Ï¶¨ÖÜÎ§µÄP0P1P2P3P4P5P6P7 ÖĞÒ»¶¨ÖÁÉÙÓĞÒ»¸öÎª0
-				if (sum == 0)
-				{
-					*vergeMark = 1;// ±í¼Ç±ßÔµ
-				}
-
-				pmid++;
-				vergeMark++;
-			}
-			pmid++;//Ìø¹ıÍ¼Ïñ×îºóÒ»ÁĞ£¬²»¿¼ÂÇ
-			vergeMark++;
-
-			pmid++;//Ìø¹ıÍ¼ÏñµÚÒ»ÁĞ£¬²»¿¼ÂÇ
-			vergeMark++;
-		}
-
-		/*---------------ÑØ×Å±ßÔµÏÖÔÚ¿ªÊ¼É¾³ı----------------*/
-		pmid = (unsigned char *)imagedata + lWidth + 1;
-		vergeMark = (unsigned char *)pTemp + lWidth + 1;
-
-		for (long i = 1; i < lHeight - 1; i++)   // ²»¿¼ÂÇÍ¼ÏñµÚÒ»ĞĞ µÚÒ»ÁĞ ×îºóÒ»ĞĞ ×îºóÒ»ÁĞ
-		{
-			for (long j = 1; j < lWidth - 1; j++)
-			{
-				//*vergeMark=0±íÊ¾Õâ¸öµã²»ÊÇ±ßÔµ£¬¼´²»½øĞĞÉ¾³ı
-				if (*vergeMark == 0)
-				{
-					pmid++;
-					vergeMark++;
-
-					continue;
-				}
-				//Èç¹ûÊÇ1£¬ÊÇÎÒÃÇ¿¼ÂÇµÄµã ÎÒÃÇĞèÒª¶ÔÖÜÎ§8¸ö½øĞĞÅĞ¶Ï
-				//ÅĞ¶ÏÒ»¸öµãÊÇ·ñÄÜÈ¥µô, Òª¸ù¾İËüµÄ°Ë¸öÏàÁÚµãµÄÇé¿öÀ´ÅĞ¶Ï
-				p0 = *(pmid - lWidth - 1);
-				p1 = *(pmid - lWidth);                  //    P0 P1 P2
-				p2 = *(pmid - lWidth + 1);             //    P7    P3
-				p3 = *(pmid + 1);					    //    P6 P5 P4
-				p4 = *(pmid + lWidth + 1);
-				p5 = *(pmid + lWidth);
-				p6 = *(pmid + lWidth - 1);
-				p7 = *(pmid - 1);
-
-
-				/*¸ù¾İËüµÄ°Ë¸öÏàÁÚµãµÄÇé¿öĞÎ³ÉµÄË÷Òı±í½øĞĞÉ¾³ı²Ù×÷
-				*
-				* ¾­¹ıÔ¤´¦ÀíºóµÃµ½´ıÏ¸»¯µÄÍ¼ÏñÊÇ0¡¢1¶şÖµÍ¼Ïñ¡£
-				* ÏñËØÖµÎª1µÄÊÇĞèÒªÏ¸»¯µÄ²¿·Ö£¬ÏñËØÖµÎª0µÄÊÇ±³¾°ÇøÓò¡£
-				*
-				* »ùÓÚË÷Òı±íµÄËã·¨¾ÍÊÇ"ÒÀ¾İÒ»¶¨µÄÅĞ¶ÏÒÀ¾İ"£¬Ëù×ö³öµÄÒ»ÕÅ±í£¬
-				* ÒòÎªÒ»¸öÏñËØµÄ8¸öÁÚÓò£¬ÎÒÃÇ¿ÉÒÔÓÃ8Î»¶ş½øÖÆ±íÊ¾£¬¹²ÓĞ256ÖĞ¿ÉÄÜÇé¿ö£¬
-				* Òò´Ë£¬Ë÷Òı±íµÄ´óĞ¡Ò»°ãÎª256¡£
-				* ¸ù¾İË÷ÒıÖµ¶ÔÓ¦±íÖĞµÄÎ»ÖÃ´æ0»ò1£¬
-				*                  µ±Ç°ÏñËØ²»ÄÜÉ¾³ı´æÎª0£¬
-				*                  ¿ÉÒÔÉ¾³ı´æÎª1¡£
-				*
-				* È»ºó¸ù¾İÒªÏ¸»¯µÄµãµÄ°Ë¸öÁÚÓòµÄÔÚË÷Òı±íÖĞÇé¿ö²éÑ¯£¬
-				* Èô±íÖĞÔªËØÊÇ1£¬ÔòÉ¾³ı¸Ãµã£¨¸ÄÎª±³¾°£©
-				* ÈôÊÇ0Ôò±£Áô¡£
-				*
-				*
-				* ----------------------------------------
-				* |p7 | p6 | p5 | p4 | p3 | p2 | p1 | p0 |---Ë÷ÒıÖµ¶ÔÓ¦±íÖĞµÄÎ»ÖÃ-----¡·¹²ÓĞ256ÖĞ¿ÉÄÜÇé¿ö
-				* ----------------------------------------
-				£¨Î»ÖÃ1 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 1,
-				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1,
-				0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1,
-				0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1,
-				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-				0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1,
-				1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1,
-				0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 1,
-				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1,
-				1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
-				1, 1, 0, 1, 0, 0, 0, 1, 1, 1, 0, 0, 1, 0, 0, 0,
-				0, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 1,
-				0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1,
-				1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0,
-				1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0£¨Î»ÖÃ256£©
-				*/
-				//´ËÊ±p0--µ½---p7µÄÖµ²»ÊÇ0¾ÍÊÇ1
-				p1 *= 2;
-				p2 *= 4;
-				p3 *= 8;
-				p4 *= 16;
-				p5 *= 32;
-				p6 *= 64;
-				p7 *= 128;
-
-				sum = p0 | p1 | p2 | p3 | p4 | p5 | p6 | p7;
-				//  sum = p0 + p1 + p2 + p3 + p4 + p5 + p6 + p7;
-				if (deletemark[sum] == 1)//¿ÉÒÔÉ¾³ı
-				{
-					*pmid = 0;
-					bStart = true;      //  ±íÃ÷±¾´ÎÉ¨Ãè½øĞĞÁËÏ¸»¯
-				}
-				pmid++;
-				vergeMark++;
-			}
-
-			pmid++;//Ìø¹ıÍ¼Ïñ×îºóÒ»ÁĞ£¬²»¿¼ÂÇ
-			vergeMark++;
-
-			pmid++;//Ìø¹ıÍ¼ÏñµÚÒ»ÁĞ£¬²»¿¼ÂÇ
-			vergeMark++;
-		}
-	}
-
-	//Ñ­»·½áÊøËµÃ÷Ã»ÓĞ¿ÉÒÔ¼ÌĞøÏ¸»¯µÄµãÁË£¬ÔòÎªÏ¸»¯½áÊø
-	delete[]pTemp;
-	return true;
-}
-BOOL GetHistogram(unsigned char *pImageData, int nWidth, int nHeight, int nWidthStep,
-	int *pHistogram)
-{
-	int            i = 0;
-	int            j = 0;
-	unsigned char *pLine = NULL;
-	// Çå¿ÕÖ±·½Í¼   
-	memset(pHistogram, 0, sizeof(int) * 256);
-
-	for (pLine = pImageData, j = 0; j < nHeight; j++, pLine += nWidthStep)
-	{
-		for (i = 0; i < nWidth; i++)
-		{
-			pHistogram[pLine[i]]++;
-		}
-	}
-	return TRUE;
-}
-
-// ´ó½ò·¨È¡ãĞÖµ   
-// 1. pImageData   Í¼ÏñÊı¾İ   
-// 2. nWidth       Í¼Ïñ¿í¶È   
-// 3. nHeight      Í¼Ïñ¸ß¶È   
-// 4. nWidthStep   Í¼ÏñĞĞ´óĞ¡   
-// º¯Êı·µ»ØãĞÖµ   
-int Otsu(unsigned char *pImageData, int nWidth, int nHeight, int nWidthStep)
-{
-	int    i = 0;
-	int    j = 0;
-	int    nTotal = 0;
-	int    nSum = 0;
-	int    A = 0;
-	int    B = 0;
-	double u = 0;
-	double v = 0;
-	double dVariance = 0;
-	double dMaximum = 0;
-	int    nThreshold = 0;
-	int    nHistogram[256];
-	// »ñÈ¡Ö±·½Í¼   
-	GetHistogram(pImageData, nWidth, nHeight, nWidthStep, nHistogram);
-	for (i = 0; i < 256; i++)
-	{
-		nTotal += nHistogram[i];
-		nSum += (nHistogram[i] * i);
-	}
-	for (j = 0; j < 256; j++)
-	{
-		A = 0;
-		B = 0;
-		for (i = 0; i < j; i++)
-		{
-			A += nHistogram[i];
-			B += (nHistogram[i] * i);
-		}
-		if (A > 0)
-		{
-			u = B / A;
-		}
-		else
-		{
-			u = 0;
-		}
-		if (nTotal - A > 0)
-		{
-			v = (nSum - B) / (nTotal - A);
-		}
-		else
-		{
-			v = 0;
-		}
-		dVariance = A * (nTotal - A) * (u - v) * (u - v);
-		if (dVariance > dMaximum)
-		{
-			dMaximum = dVariance;
-			nThreshold = j;
-		}
-	}
-	return nThreshold;
-}
-
-
-
-// ¶şÖµ»¯   
-// 1. pImageData   Í¼ÏñÊı¾İ   
-// 2. nWidth       Í¼Ïñ¿í¶È   
-// 3. nHeight      Í¼Ïñ¸ß¶È   
-// 4. nWidthStep   Í¼ÏñĞĞ´óĞ¡   
-// 5. nThreshold   ãĞÖµ   
-BOOL Thresholding(unsigned char *pImageData, int nWidth, int nHeight, int nWidthStep,
-	unsigned int nThreshold)
-{
-	int            i = 0;
-	int            j = 0;
-	unsigned char *pLine = NULL;
-	for (pLine = pImageData, j = 0; j < nHeight; j++, pLine += nWidthStep)
-	{
-		for (i = 0; i < nWidth; i++)
-		{
-			if (pLine[i] >= nThreshold)
-			{
-				pLine[i] = 0x00;
-			}
-			else
-			{
-				pLine[i] = 0xff;
-			}
-		}
-	}
-	return TRUE;
-}
-
-
-
-
-
-void ThinnerHilditch(void *image, unsigned long lx, unsigned long ly)
-{
-	char *f, *g;
-	char n[10];
-	unsigned int counter;
-	short k, shori, xx, nrn;
-	unsigned long i, j;
-	long kk, kk11, kk12, kk13, kk21, kk22, kk23, kk31, kk32, kk33, size;
-	size = (long)lx * (long)ly;
-	g = (char *)malloc(size);
-
-	if (g == NULL)
-	{
-		printf("error in allocating memory!\n");
-		return;
-	}
-
-	f = (char *)image;
-	for (i = 0; i<lx; i++)
-	{
-		for (j = 0; j<ly; j++)
-		{
-			kk = i*ly + j;
-			if (f[kk] != 0)
-			{
-				f[kk] = 1;
-				g[kk] = f[kk];
-			}
-		}
-	}
-
-	counter = 1;
-
-	do
-	{
-		printf("%4d*", counter);
-		counter++;
-		shori = 0;
-
-		for (i = 0; i<lx; i++)
-		{
-			for (j = 0; j<ly; j++)
-			{
-				kk = i*ly + j;
-				if (f[kk]<0)
-					f[kk] = 0;
-				g[kk] = f[kk];
-			}
-		}
-
-		for (i = 1; i<lx - 1; i++)
-		{
-			for (j = 1; j<ly - 1; j++)
-			{
-				kk = i*ly + j;
-
-				if (f[kk] != 1)
-					continue;
-
-				kk11 = (i - 1)*ly + j - 1;
-				kk12 = kk11 + 1;
-				kk13 = kk12 + 1;
-				kk21 = i*ly + j - 1;
-				kk22 = kk21 + 1;
-				kk23 = kk22 + 1;
-				kk31 = (i + 1)*ly + j - 1;
-				kk32 = kk31 + 1;
-				kk33 = kk32 + 1;
-
-				if ((g[kk12] && g[kk21] && g[kk23] && g[kk32]) != 0)
-					continue;
-
-				nrn = g[kk11] + g[kk12] + g[kk13] + g[kk21] + g[kk23] +
-					g[kk31] + g[kk32] + g[kk33];
-
-				if (nrn <= 1)
-				{
-					f[kk22] = 2;
-					continue;
-				}
-
-				n[4] = f[kk11];
-				n[3] = f[kk12];
-				n[2] = f[kk13];
-				n[5] = f[kk21];
-				n[1] = f[kk23];
-				n[6] = f[kk31];
-				n[7] = f[kk32];
-				n[8] = f[kk33];
-				n[9] = n[1];
-				xx = 0;
-
-				for (k = 1; k<8; k = k + 2)
-				{
-					if ((!n[k]) && (n[k + 1] || n[k + 2]))
-						xx++;
-				}
-
-				if (xx != 1)
-				{
-					f[kk22] = 2;
-					continue;
-				}
-
-				if (f[kk12] == -1)
-				{
-					f[kk12] = 0;
-					n[3] = 0;
-					xx = 0;
-
-					for (k = 1; k<8; k = k + 2)
-					{
-						if ((!n[k]) && (n[k + 1] || n[k + 2]))
-							xx++;
-					}
-
-					if (xx != 1)
-					{
-						f[kk12] = -1;
-						continue;
-					}
-
-					f[kk12] = -1;
-					n[3] = -1;
-				}
-
-				if (f[kk21] != -1)
-				{
-					f[kk22] = -1;
-					shori = 1;
-					continue;
-				}
-
-				f[kk21] = 0;
-				n[5] = 0;
-				xx = 0;
-
-				for (k = 1; k<8; k = k + 2)
-				{
-					if ((!n[k]) && (n[k + 1] || n[k + 2]))
-					{
-						xx++;
-					}
-				}
-
-				if (xx == 1)
-				{
-					f[kk21] = -1;
-					f[kk22] = -1;
-					shori = 1;
-				}
-				else
-					f[kk21] = -1;
-			}
-		}
-	} while (shori);
-
-	free(g);
-}
-/////////////////////////////////////////////////////////////////////////
-//PavlidisÏ¸»¯Ëã·¨
-//¹¦ÄÜ£º¶ÔÍ¼Ïó½øĞĞÏ¸»¯
-//²ÎÊı£ºimage£º´ú±íÍ¼ÏóµÄÒ»Î¬Êı×é
-//      lx£ºÍ¼Ïó¿í¶È
-//      ly£ºÍ¼Ïó¸ß¶È
-//      ÎŞ·µ»ØÖµ
-void ThinnerPavlidis(void *image, unsigned long lx, unsigned long ly)
-{
-	char erase, n[8];
-	char *f;
-	unsigned char bdr1, bdr2, bdr4, bdr5;
-	short c, k, b;
-	unsigned long i, j;
-	long kk, kk1, kk2, kk3;
-	f = (char*)image;
-
-	for (i = 1; i<lx - 1; i++)
-	{
-		for (j = 1; j<ly - 1; j++)
-		{
-			kk = i*ly + j;
-			if (f[kk])
-				f[kk] = 1;
-		}
-	}
-
-	for (i = 0, kk1 = 0, kk2 = ly - 1; i<lx; i++, kk1 += ly, kk2 += ly)
-	{
-		f[kk1] = 0;
-		f[kk2] = 0;
-	}
-
-	for (j = 0, kk = (lx - 1)*ly; j<ly; j++, kk++)
-	{
-		f[j] = 0;
-		f[kk] = 0;
-	}
-
-	c = 5;
-	erase = 1;
-	while (erase)
-	{
-		c++;
-		for (i = 1; i<lx - 1; i++)
-		{
-			for (j = 1; j<ly - 1; j++)
-			{
-				kk = i*ly + j;
-				if (f[kk] != 1)
-					continue;
-
-				kk1 = kk - ly - 1;
-				kk2 = kk1 + 1;
-				kk3 = kk2 + 1;
-				n[3] = f[kk1];
-				n[2] = f[kk2];
-				n[1] = f[kk3];
-				kk1 = kk - 1;
-				kk3 = kk + 1;
-				n[4] = f[kk1];
-				n[0] = f[kk3];
-				kk1 = kk + ly - 1;
-				kk2 = kk1 + 1;
-				kk3 = kk2 + 1;
-				n[5] = f[kk1];
-				n[6] = f[kk2];
-				n[7] = f[kk3];
-
-				bdr1 = 0;
-				for (k = 0; k<8; k++)
-				{
-					if (n[k] >= 1)
-						bdr1 |= 0x80 >> k;
-				}
-
-				if ((bdr1 & 0252) == 0252)
-					continue;
-				f[kk] = 2;
-				b = 0;
-
-				for (k = 0; k <= 7; k++)
-				{
-					b += bdr1&(0x80 >> k);
-				}
-
-				if (b <= 1)
-					f[kk] = 3;
-
-				if ((bdr1 & 0160) != 0 && (bdr1 & 07) != 0 && (bdr1 & 0210) == 0)
-					f[kk] = 3;
-				else if ((bdr1 && 0301) != 0 && (bdr1 & 034) != 0 && (bdr1 & 042) == 0)
-					f[kk] = 3;
-				else if ((bdr1 & 0202) == 0 && (bdr1 & 01) != 0)
-					f[kk] = 3;
-				else if ((bdr1 & 0240) == 0 && (bdr1 & 0100) != 0)
-					f[kk] = 3;
-				else if ((bdr1 & 050) == 0 && (bdr1 & 020) != 0)
-					f[kk] = 3;
-				else if ((bdr1 & 012) == 0 && (bdr1 & 04) != 0)
-					f[kk] = 3;
-			}
-		}
-
-		for (i = 1; i<lx - 1; i++)
-		{
-			for (j = 1; j<ly - 1; j++)
-			{
-				kk = i*ly + j;
-				if (!f[kk])
-					continue;
-
-				kk1 = kk - ly - 1;
-				kk2 = kk1 + 1;
-				kk3 = kk2 + 1;
-				n[3] = f[kk1];
-				n[2] = f[kk2];
-				n[1] = f[kk3];
-				kk1 = kk - 1;
-				kk2 = kk + 1;
-				n[4] = f[kk1];
-				n[0] = f[kk3];
-				kk1 = kk + ly - 1;
-				kk2 = kk1 + 1;
-				kk3 = kk2 + 1;
-				n[5] = f[kk1];
-				n[6] = f[kk2];
-				n[7] = f[kk3];
-				bdr1 = bdr2 = 0;
-
-				for (k = 0; k <= 7; k++)
-				{
-					if (n[k] >= 1)
-						bdr1 |= 0x80 >> k;
-					if (n[k] >= 2)
-						bdr2 |= 0x80 >> k;
-				}
-
-				if (bdr1 == bdr2)
-				{
-					f[kk] = 4;
-					continue;
-				}
-
-				if (f[kk] != 2)
-					continue;
-
-				if ((bdr2 & 0200) != 0 && (bdr1 & 010) == 0 &&
-					((bdr1 & 0100) != 0 && (bdr1 & 001) != 0 ||
-					((bdr1 & 0100) != 0 || (bdr1 & 001) != 0) &&
-						(bdr1 & 060) != 0 && (bdr1 & 06) != 0))
-				{
-					f[kk] = 4;
-				}
-
-				else if ((bdr2 & 040) != 0 && (bdr1 & 02) == 0 &&
-					((bdr1 & 020) != 0 && (bdr1 & 0100) != 0 ||
-					((bdr1 & 020) != 0 || (bdr1 & 0100) != 0) &&
-						(bdr1 & 014) != 0 && (bdr1 & 0201) != 0))
-				{
-					f[kk] = 4;
-				}
-
-				else if ((bdr2 & 010) != 0 && (bdr1 & 0200) == 0 &&
-					((bdr1 & 04) != 0 && (bdr1 & 020) != 0 ||
-					((bdr1 & 04) != 0 || (bdr1 & 020) != 0) &&
-						(bdr1 & 03) != 0 && (bdr1 & 0140) != 0))
-				{
-					f[kk] = 4;
-				}
-
-				else if ((bdr2 & 02) != 0 && (bdr1 & 040) == 0 &&
-					((bdr1 & 01) != 0 && (bdr1 & 04) != 0 ||
-					((bdr1 & 01) != 0 || (bdr1 & 04) != 0) &&
-						(bdr1 & 0300) != 0 && (bdr1 & 030) != 0))
-				{
-					f[kk] = 4;
-				}
-			}
-		}
-
-		for (i = 1; i<lx - 1; i++)
-		{
-			for (j = 1; j<ly - 1; j++)
-			{
-				kk = i*ly + j;
-				if (f[kk] != 2)
-					continue;
-				kk1 = kk - ly - 1;
-				kk2 = kk1 + 1;
-				kk3 = kk2 + 1;
-				n[3] = f[kk1];
-				n[2] = f[kk2];
-				n[1] = f[kk3];
-				kk1 = kk - 1;
-				kk2 = kk + 1;
-				n[4] = f[kk1];
-				n[0] = f[kk3];
-				kk1 = kk + ly - 1;
-				kk2 = kk1 + 1;
-				kk3 = kk2 + 1;
-				n[5] = f[kk1];
-				n[6] = f[kk2];
-				n[7] = f[kk3];
-				bdr4 = bdr5 = 0;
-				for (k = 0; k <= 7; k++)
-				{
-					if (n[k] >= 4)
-						bdr4 |= 0x80 >> k;
-					if (n[k] >= 5)
-						bdr5 |= 0x80 >> k;
-				}
-				if ((bdr4 & 010) == 0)
-				{
-					f[kk] = 5;
-					continue;
-				}
-				if ((bdr4 & 040) == 0 && bdr5 == 0)
-				{
-					f[kk] = 5;
-					continue;
-				}
-				if (f[kk] == 3 || f[kk] == 4)
-					f[kk] = c;
-			}
-		}
-
-		erase = 0;
-		for (i = 1; i<lx - 1; i++)
-		{
-			for (j = 1; j<ly - 1; j++)
-			{
-				kk = i*ly + j;
-				if (f[kk] == 2 || f[kk] == 5)
-				{
-					erase = 1;
-					f[kk] = 0;
-				}
-			}
-		}
-	}
-}
-
-/////////////////////////////////////////////////////////////////////////
-//RosenfeldÏ¸»¯Ëã·¨
-//¹¦ÄÜ£º¶ÔÍ¼Ïó½øĞĞÏ¸»¯
-//²ÎÊı£ºimage£º´ú±íÍ¼ÏóµÄÒ»Î¬Êı×é
-//      lx£ºÍ¼Ïó¿í¶È
-//      ly£ºÍ¼Ïó¸ß¶È
-//      ÎŞ·µ»ØÖµ
-void ThinnerRosenfeld(void *image, unsigned long lx, unsigned long ly)
-{
-	char *f, *g;
-	char n[10];
-	char a[5] = { 0, -1, 1, 0, 0 };
-	char b[5] = { 0, 0, 0, 1, -1 };
-	char nrnd, cond, n48, n26, n24, n46, n68, n82, n123, n345, n567, n781;
-	short k, shori;
-	unsigned long i, j;
-	long ii, jj, kk, kk1, kk2, kk3, size;
-	size = (long)lx * (long)ly;
-
-	g = (char *)malloc(size);
-	if (g == NULL)
-	{
-		printf("error in alocating mmeory!\n");
-		return;
-	}
-
-	f = (char *)image;
-	for (kk = 0l; kk<size; kk++)
-	{
-		g[kk] = f[kk];
-	}
-
-	do
-	{
-		shori = 0;
-		for (k = 1; k <= 4; k++)
-		{
-			for (i = 1; i<lx - 1; i++)
-			{
-				ii = i + a[k];
-
-				for (j = 1; j<ly - 1; j++)
-				{
-					kk = i*ly + j;
-
-					if (!f[kk])
-						continue;
-
-					jj = j + b[k];
-					kk1 = ii*ly + jj;
-
-					if (f[kk1])
-						continue;
-
-					kk1 = kk - ly - 1;
-					kk2 = kk1 + 1;
-					kk3 = kk2 + 1;
-					n[3] = f[kk1];
-					n[2] = f[kk2];
-					n[1] = f[kk3];
-					kk1 = kk - 1;
-					kk3 = kk + 1;
-					n[4] = f[kk1];
-					n[8] = f[kk3];
-					kk1 = kk + ly - 1;
-					kk2 = kk1 + 1;
-					kk3 = kk2 + 1;
-					n[5] = f[kk1];
-					n[6] = f[kk2];
-					n[7] = f[kk3];
-
-					nrnd = n[1] + n[2] + n[3] + n[4]
-						+ n[5] + n[6] + n[7] + n[8];
-					if (nrnd <= 1)
-						continue;
-
-					cond = 0;
-					n48 = n[4] + n[8];
-					n26 = n[2] + n[6];
-					n24 = n[2] + n[4];
-					n46 = n[4] + n[6];
-					n68 = n[6] + n[8];
-					n82 = n[8] + n[2];
-					n123 = n[1] + n[2] + n[3];
-					n345 = n[3] + n[4] + n[5];
-					n567 = n[5] + n[6] + n[7];
-					n781 = n[7] + n[8] + n[1];
-
-					if (n[2] == 1 && n48 == 0 && n567>0)
-					{
-						if (!cond)
-							continue;
-						g[kk] = 0;
-						shori = 1;
-						continue;
-					}
-
-					if (n[6] == 1 && n48 == 0 && n123>0)
-					{
-						if (!cond)
-							continue;
-						g[kk] = 0;
-						shori = 1;
-						continue;
-					}
-
-					if (n[8] == 1 && n26 == 0 && n345>0)
-					{
-						if (!cond)
-							continue;
-						g[kk] = 0;
-						shori = 1;
-						continue;
-					}
-
-					if (n[4] == 1 && n26 == 0 && n781>0)
-					{
-						if (!cond)
-							continue;
-						g[kk] = 0;
-						shori = 1;
-						continue;
-					}
-
-					if (n[5] == 1 && n46 == 0)
-					{
-						if (!cond)
-							continue;
-						g[kk] = 0;
-						shori = 1;
-						continue;
-					}
-
-					if (n[7] == 1 && n68 == 0)
-					{
-						if (!cond)
-							continue;
-						g[kk] = 0;
-						shori = 1;
-						continue;
-					}
-
-					if (n[1] == 1 && n82 == 0)
-					{
-						if (!cond)
-							continue;
-						g[kk] = 0;
-						shori = 1;
-						continue;
-					}
-
-					if (n[3] == 1 && n24 == 0)
-					{
-						if (!cond)
-							continue;
-						g[kk] = 0;
-						shori = 1;
-						continue;
-					}
-
-					cond = 1;
-					if (!cond)
-						continue;
-					g[kk] = 0;
-					shori = 1;
-				}
-			}
-
-			for (i = 0; i<lx; i++)
-			{
-				for (j = 0; j<ly; j++)
-				{
-					kk = i*ly + j;
-					f[kk] = g[kk];
-				}
-			}
-		}
-	} while (shori);
-
-	free(g);
-}
-
-/////////////////////////////////////////////////////////////////////////
-//»ùÓÚË÷Òı±íµÄÏ¸»¯Ï¸»¯Ëã·¨
-//¹¦ÄÜ£º¶ÔÍ¼Ïó½øĞĞÏ¸»¯
-//²ÎÊı£ºlpDIBBits£º´ú±íÍ¼ÏóµÄÒ»Î¬Êı×é
-//      lWidth£ºÍ¼Ïó¸ß¶È
-//      lHeight£ºÍ¼Ïó¿í¶È
-//      ÎŞ·µ»ØÖµ
-BOOL WINAPI ThiningDIBSkeleton(LPSTR lpDIBBits, LONG lWidth, LONG lHeight)
-{
-	//Ñ­»·±äÁ¿
-	long i;
-	long j;
-	long lLength;
-
-	unsigned char deletemark[256] = {
-		0,0,0,0,0,0,0,1,	0,0,1,1,0,0,1,1,
-		0,0,0,0,0,0,0,0,	0,0,1,1,1,0,1,1,
-		0,0,0,0,0,0,0,0,	1,0,0,0,1,0,1,1,
-		0,0,0,0,0,0,0,0,	1,0,1,1,1,0,1,1,
-		0,0,0,0,0,0,0,0,	0,0,0,0,0,0,0,0,
-		0,0,0,0,0,0,0,0,	0,0,0,0,0,0,0,0,
-		0,0,0,0,0,0,0,0,	1,0,0,0,1,0,1,1,
-		1,0,0,0,0,0,0,0,	1,0,1,1,1,0,1,1,
-		0,0,1,1,0,0,1,1,	0,0,0,1,0,0,1,1,
-		0,0,0,0,0,0,0,0,	0,0,0,1,0,0,1,1,
-		1,1,0,1,0,0,0,1,	0,0,0,0,0,0,0,0,
-		1,1,0,1,0,0,0,1,	1,1,0,0,1,0,0,0,
-		0,1,1,1,0,0,1,1,	0,0,0,1,0,0,1,1,
-		0,0,0,0,0,0,0,0,	0,0,0,0,0,1,1,1,
-		1,1,1,1,0,0,1,1,	1,1,0,0,1,1,0,0,
-		1,1,1,1,0,0,1,1,	1,1,0,0,1,1,0,0
-	};//Ë÷Òı±í
-
-	unsigned char p0, p1, p2, p3, p4, p5, p6, p7;
-	unsigned char *pmid, *pmidtemp;
-	unsigned char sum;
-	int changed;
-	bool bStart = true;
-	lLength = lWidth * lHeight;
-	unsigned char *pTemp = (unsigned char *)malloc(sizeof(unsigned char) * lWidth * lHeight);
-
-	//    P0 P1 P2
-	//    P7    P3
-	//    P6 P5 P4
-
-	while (bStart)
-	{
-		bStart = false;
-		changed = 0;
-
-		//Ê×ÏÈÇó±ßÔµµã(²¢ĞĞ)
-		pmid = (unsigned char *)lpDIBBits + lWidth + 1;
-		memset(pTemp, (BYTE)0, lLength);
-		pmidtemp = (unsigned char *)pTemp + lWidth + 1;
-		for (i = 1; i < lHeight - 1; i++)
-		{
-			for (j = 1; j < lWidth - 1; j++)
-			{
-				if (*pmid == 0)
-				{
-					pmid++;
-					pmidtemp++;
-					continue;
-				}
-
-				p3 = *(pmid + 1);
-				p2 = *(pmid + 1 - lWidth);
-				p1 = *(pmid - lWidth);
-				p0 = *(pmid - lWidth - 1);
-				p7 = *(pmid - 1);
-				p6 = *(pmid + lWidth - 1);
-				p5 = *(pmid + lWidth);
-				p4 = *(pmid + lWidth + 1);
-
-				sum = p0 & p1 & p2 & p3 & p4 & p5 & p6 & p7;
-				if (sum == 0)
-				{
-					*pmidtemp = 1;
-				}
-
-				pmid++;
-				pmidtemp++;
-			}
-			pmid++;
-			pmid++;
-			pmidtemp++;
-			pmidtemp++;
-		}
-
-		//ÏÖÔÚ¿ªÊ¼´®ĞĞÉ¾³ı
-		pmid = (unsigned char *)lpDIBBits + lWidth + 1;
-		pmidtemp = (unsigned char *)pTemp + lWidth + 1;
-
-		for (i = 1; i < lHeight - 1; i++)
-		{
-			for (j = 1; j < lWidth - 1; j++)
-			{
-				if (*pmidtemp == 0)
-				{
-					pmid++;
-					pmidtemp++;
-					continue;
-				}
-
-				p3 = *(pmid + 1);
-				p2 = *(pmid + 1 - lWidth);
-				p1 = *(pmid - lWidth);
-				p0 = *(pmid - lWidth - 1);
-				p7 = *(pmid - 1);
-				p6 = *(pmid + lWidth - 1);
-				p5 = *(pmid + lWidth);
-				p4 = *(pmid + lWidth + 1);
-
-				p1 *= 2;
-				p2 *= 4;
-				p3 *= 8;
-				p4 *= 16;
-				p5 *= 32;
-				p6 *= 64;
-				p7 *= 128;
-
-				sum = p0 | p1 | p2 | p3 | p4 | p5 | p6 | p7;
-				if (deletemark[sum] == 1)
-				{
-					*pmid = 0;
-					bStart = true;
-				}
-
-				pmid++;
-				pmidtemp++;
-			}
-
-			pmid++;
-			pmid++;
-			pmidtemp++;
-			pmidtemp++;
-		}
-	}
-
-	return true;
-}
-
-//È¥³ı¶şÖµÍ¼Ïñ±ßÔµµÄÍ»³ö²¿
-//uthreshold¡¢vthreshold·Ö±ğ±íÊ¾Í»³ö²¿µÄ¿í¶ÈãĞÖµºÍ¸ß¶ÈãĞÖµ
-//type´ú±íÍ»³ö²¿µÄÑÕÉ«£¬0±íÊ¾ºÚÉ«£¬1´ú±í°×É« 
+//å»é™¤äºŒå€¼å›¾åƒè¾¹ç¼˜çš„çªå‡ºéƒ¨
+//uthresholdã€vthresholdåˆ†åˆ«è¡¨ç¤ºçªå‡ºéƒ¨çš„å®½åº¦é˜ˆå€¼å’Œé«˜åº¦é˜ˆå€¼
+//typeä»£è¡¨çªå‡ºéƒ¨çš„é¢œè‰²ï¼Œ0è¡¨ç¤ºé»‘è‰²ï¼Œ1ä»£è¡¨ç™½è‰² 
 void delete_jut(Mat& src, Mat& dst, int uthreshold, int vthreshold, int type)
 {
 	int threshold;
 	src.copyTo(dst);
 	int height = dst.rows;
 	int width = dst.cols;
-	int k;  //ÓÃÓÚÑ­»·¼ÆÊı´«µİµ½Íâ²¿
+	int k;  //ç”¨äºå¾ªç¯è®¡æ•°ä¼ é€’åˆ°å¤–éƒ¨
 	for (int i = 0; i < height - 1; i++)
 	{
 		uchar* p = dst.ptr<uchar>(i);
@@ -1076,7 +39,7 @@ void delete_jut(Mat& src, Mat& dst, int uthreshold, int vthreshold, int type)
 		{
 			if (type == 0)
 			{
-				//ĞĞÏû³ı
+				//è¡Œæ¶ˆé™¤
 				if (p[j] == 255 && p[j + 1] == 0)
 				{
 					if (j + uthreshold >= width)
@@ -1097,7 +60,7 @@ void delete_jut(Mat& src, Mat& dst, int uthreshold, int vthreshold, int type)
 						}
 					}
 				}
-				//ÁĞÏû³ı
+				//åˆ—æ¶ˆé™¤
 				if (p[j] == 255 && p[j + width] == 0)
 				{
 					if (i + vthreshold >= height)
@@ -1121,7 +84,7 @@ void delete_jut(Mat& src, Mat& dst, int uthreshold, int vthreshold, int type)
 			}
 			else  //type = 1
 			{
-				//ĞĞÏû³ı
+				//è¡Œæ¶ˆé™¤
 				if (p[j] == 0 && p[j + 1] == 255)
 				{
 					if (j + uthreshold >= width)
@@ -1142,7 +105,7 @@ void delete_jut(Mat& src, Mat& dst, int uthreshold, int vthreshold, int type)
 						}
 					}
 				}
-				//ÁĞÏû³ı
+				//åˆ—æ¶ˆé™¤
 				if (p[j] == 0 && p[j + width] == 255)
 				{
 					if (i + vthreshold >= height)
@@ -1168,8 +131,8 @@ void delete_jut(Mat& src, Mat& dst, int uthreshold, int vthreshold, int type)
 	}
 }
 
-//Í¼Æ¬±ßÔµ¹â»¬´¦Àí
-//size±íÊ¾È¡¾ùÖµµÄ´°¿Ú´óĞ¡£¬threshold±íÊ¾¶Ô¾ùÖµÍ¼Ïñ½øĞĞ¶şÖµ»¯µÄãĞÖµ
+//å›¾ç‰‡è¾¹ç¼˜å…‰æ»‘å¤„ç†
+//sizeè¡¨ç¤ºå–å‡å€¼çš„çª—å£å¤§å°ï¼Œthresholdè¡¨ç¤ºå¯¹å‡å€¼å›¾åƒè¿›è¡ŒäºŒå€¼åŒ–çš„é˜ˆå€¼
 void imageblur(Mat& src, Mat& dst, Size size, int threshold)
 {
 	int height = src.rows;
@@ -1187,45 +150,194 @@ void imageblur(Mat& src, Mat& dst, Size size, int threshold)
 	}
 	imshow("Blur", dst);
 }
+
+
+
+/**
+Â * @brief å¯¹è¾“å…¥å›¾åƒè¿›è¡Œç»†åŒ–
+ Â * @param srcä¸ºè¾“å…¥å›¾åƒ,ç”¨cvThresholdå‡½æ•°å¤„ç†è¿‡çš„8ä½ç°åº¦å›¾åƒæ ¼å¼ï¼Œå…ƒç´ ä¸­åªæœ‰0ä¸1,1ä»£è¡¨æœ‰å…ƒç´ ï¼Œ0ä»£è¡¨ä¸ºç©ºç™½
+  Â * @param maxIterationsé™åˆ¶è¿­ä»£æ¬¡æ•°ï¼Œå¦‚æœä¸è¿›è¡Œé™åˆ¶ï¼Œé»˜è®¤ä¸º-1ï¼Œä»£è¡¨ä¸é™åˆ¶è¿­ä»£æ¬¡æ•°ï¼Œç›´åˆ°è·å¾—æœ€ç»ˆç»“æœ
+   Â * @return ä¸ºå¯¹srcç»†åŒ–åçš„è¾“å‡ºå›¾åƒ,æ ¼å¼ä¸srcæ ¼å¼ç›¸åŒï¼Œå…ƒç´ ä¸­åªæœ‰0ä¸1,1ä»£è¡¨æœ‰å…ƒç´ ï¼Œ0ä»£è¡¨ä¸ºç©ºç™½
+	Â */
+cv::Mat thinImage(const cv::Mat & src, const int maxIterations = -1)
+{
+	assert(src.type() == CV_8UC1);
+	cv::Mat dst;
+	int width = src.cols;
+	int height = src.rows;
+	src.copyTo(dst);
+	int count = 0;
+	while (true)
+	{
+		count++;
+		if (maxIterations != -1 && count > maxIterations) //é™åˆ¶æ¬¡æ•°å¹¶ä¸”è¿­ä»£æ¬¡æ•°åˆ°è¾¾
+			break;
+		std::vector<uchar *> mFlag; //ç”¨äºæ ‡è®°éœ€è¦åˆ é™¤çš„ç‚¹
+									//å¯¹ç‚¹æ ‡è®°
+		for (int i = 0; i < height; ++i)
+		{
+			uchar * p = dst.ptr<uchar>(i);
+			for (int j = 0; j < width; ++j)
+			{
+				//å¦‚æœæ»¡è¶³å››ä¸ªæ¡ä»¶ï¼Œè¿›è¡Œæ ‡è®°
+				// Â p9 p2 p3
+				// Â p8 p1 p4
+				// Â p7 p6 p5
+				uchar p1 = p[j];
+				if (p1 != 1) continue;
+				uchar p4 = (j == width - 1) ? 0 : *(p + j + 1);
+				uchar p8 = (j == 0) ? 0 : *(p + j - 1);
+				uchar p2 = (i == 0) ? 0 : *(p - dst.step + j);
+				uchar p3 = (i == 0 || j == width - 1) ? 0 : *(p - dst.step + j + 1);
+				uchar p9 = (i == 0 || j == 0) ? 0 : *(p - dst.step + j - 1);
+				uchar p6 = (i == height - 1) ? 0 : *(p + dst.step + j);
+				uchar p5 = (i == height - 1 || j == width - 1) ? 0 : *(p + dst.step + j + 1);
+				uchar p7 = (i == height - 1 || j == 0) ? 0 : *(p + dst.step + j - 1);
+				if ((p2 + p3 + p4 + p5 + p6 + p7 + p8 + p9) >= 2 && (p2 + p3 + p4 + p5 + p6 + p7 + p8 + p9) <= 6)
+				{
+					int ap = 0;
+					if (p2 == 0 && p3 == 1) ++ap;
+					if (p3 == 0 && p4 == 1) ++ap;
+					if (p4 == 0 && p5 == 1) ++ap;
+					if (p5 == 0 && p6 == 1) ++ap;
+					if (p6 == 0 && p7 == 1) ++ap;
+					if (p7 == 0 && p8 == 1) ++ap;
+					if (p8 == 0 && p9 == 1) ++ap;
+					if (p9 == 0 && p2 == 1) ++ap;
+
+					if (ap == 1 && p2 * p4 * p6 == 0 && p4 * p6 * p8 == 0)
+					{
+						//æ ‡è®°
+						mFlag.push_back(p + j);
+					}
+				}
+			}
+		}
+
+		//å°†æ ‡è®°çš„ç‚¹åˆ é™¤
+		for (std::vector<uchar *>::iterator i = mFlag.begin(); i != mFlag.end(); ++i)
+		{
+			**i = 0;
+		}
+
+		//ç›´åˆ°æ²¡æœ‰ç‚¹æ»¡è¶³ï¼Œç®—æ³•ç»“æŸ
+		if (mFlag.empty())
+		{
+			break;
+		}
+		else
+		{
+			mFlag.clear();//å°†mFlagæ¸…ç©º
+		}
+
+		//å¯¹ç‚¹æ ‡è®°
+		for (int i = 0; i < height; ++i)
+		{
+			uchar * p = dst.ptr<uchar>(i);
+			for (int j = 0; j < width; ++j)
+			{
+				//å¦‚æœæ»¡è¶³å››ä¸ªæ¡ä»¶ï¼Œè¿›è¡Œæ ‡è®°
+				// Â p9 p2 p3
+				// Â p8 p1 p4
+				// Â p7 p6 p5
+				uchar p1 = p[j];
+				if (p1 != 1) continue;
+				uchar p4 = (j == width - 1) ? 0 : *(p + j + 1);
+				uchar p8 = (j == 0) ? 0 : *(p + j - 1);
+				uchar p2 = (i == 0) ? 0 : *(p - dst.step + j);
+				uchar p3 = (i == 0 || j == width - 1) ? 0 : *(p - dst.step + j + 1);
+				uchar p9 = (i == 0 || j == 0) ? 0 : *(p - dst.step + j - 1);
+				uchar p6 = (i == height - 1) ? 0 : *(p + dst.step + j);
+				uchar p5 = (i == height - 1 || j == width - 1) ? 0 : *(p + dst.step + j + 1);
+				uchar p7 = (i == height - 1 || j == 0) ? 0 : *(p + dst.step + j - 1);
+
+				if ((p2 + p3 + p4 + p5 + p6 + p7 + p8 + p9) >= 2 && (p2 + p3 + p4 + p5 + p6 + p7 + p8 + p9) <= 6)
+				{
+					int ap = 0;
+					if (p2 == 0 && p3 == 1) ++ap;
+					if (p3 == 0 && p4 == 1) ++ap;
+					if (p4 == 0 && p5 == 1) ++ap;
+					if (p5 == 0 && p6 == 1) ++ap;
+					if (p6 == 0 && p7 == 1) ++ap;
+					if (p7 == 0 && p8 == 1) ++ap;
+					if (p8 == 0 && p9 == 1) ++ap;
+					if (p9 == 0 && p2 == 1) ++ap;
+
+					if (ap == 1 && p2 * p4 * p8 == 0 && p2 * p6 * p8 == 0)
+					{
+						//æ ‡è®°
+						mFlag.push_back(p + j);
+					}
+				}
+			}
+		}
+
+		//å°†æ ‡è®°çš„ç‚¹åˆ é™¤
+		for (std::vector<uchar *>::iterator i = mFlag.begin(); i != mFlag.end(); ++i)
+		{
+			**i = 0;
+		}
+
+		//ç›´åˆ°æ²¡æœ‰ç‚¹æ»¡è¶³ï¼Œç®—æ³•ç»“æŸ
+		if (mFlag.empty())
+		{
+			break;
+		}
+		else
+		{
+			mFlag.clear();//å°†mFlagæ¸…ç©º
+		}
+	}
+	return dst;
+}
+
+
+
+
 int main(int argc, char* argv[])
 {
-	//¼ÓÔØÔ­Í¼Ïñ
-	IplImage* src = cvLoadImage("06100018/00000115(534,694,658,828).jpg", 0);
+	//åŠ è½½åŸå›¾åƒ
+	IplImage* src = cvLoadImage("06100018/00000113(226,653,352,791).jpg", 0);
 	
 
 
-	//---------------------------Ô¤´¦Àí¶şÖµ»¯------------------------------------
-	/*¶ÔÔ­Í¼Ïñ½øĞĞ¶şÖµ»¯  ãĞÖµ
+	//---------------------------é¢„å¤„ç†äºŒå€¼åŒ–------------------------------------
+	/*å¯¹åŸå›¾åƒè¿›è¡ŒäºŒå€¼åŒ–  é˜ˆå€¼
 	cvThreshold(src, src, 100, 255, CV_THRESH_BINARY);
 
-	Í¼Ïñ¶şÖµ»¯¾ÍÊÇ½«Í¼ÏñÉÏµÄÏñËØµãµÄ»Ò¶ÈÖµÉèÖÃÎª0»ò255£¬
-	Ò²¾ÍÊÇ½«Õû¸öÍ¼Ïñ³ÊÏÖ³öÃ÷ÏÔµÄºÚ°×Ğ§¹û
-	CV_THRESH_BINARY  ÒâË¼Îª£º if src(x,y) > 100
+	å›¾åƒäºŒå€¼åŒ–å°±æ˜¯å°†å›¾åƒä¸Šçš„åƒç´ ç‚¹çš„ç°åº¦å€¼è®¾ç½®ä¸º0æˆ–255ï¼Œ
+	ä¹Ÿå°±æ˜¯å°†æ•´ä¸ªå›¾åƒå‘ˆç°å‡ºæ˜æ˜¾çš„é»‘ç™½æ•ˆæœ
+	CV_THRESH_BINARY  æ„æ€ä¸ºï¼š if src(x,y) > 100
 	src(x,y)=255
 	else
 	src(x,y)=-0
-	Ô­Í¼ÏñÓÉ0µ½255---->0»ò255
+	åŸå›¾åƒç”±0åˆ°255---->0æˆ–255
 	*/
 
-	Mat img = cvarrToMat(src);
-	Mat dst = img;
+	//ä¸‰ç§æ»¤æ³¢æ“ä½œ
 	//boxFilter(img, dst, -1, Size(5, 5));
 	//blur(img, dst, Size(7, 7));
-	GaussianBlur(img, dst, Size(5, 5), 0, 0);
+	//GaussianBlur(img, dst, Size(5, 5), 0, 0);
+
+	
 	unsigned int thresValue = Otsu((unsigned char *)src->imageData, src->width, src->height, src->widthStep);
 
 	Thresholding((unsigned char *)src->imageData, src->width, src->height, src->widthStep,
 		thresValue);
 
+	//Mat element = getStructuringElement(MORPH_RECT, Size(15, 15));
+	//erode(img, dst, element);
 
-
-	//delete_jut(img, dst, 3, 3, 0);//È¥³ı¶şÖµÍ¼Ïñ±ßÔµµÄÍ»³ö²¿  
+	Mat img = cvarrToMat(src);
+	Mat dst = img;
+	//delete_jut(img, dst, 1, 1, 0);//å»é™¤äºŒå€¼å›¾åƒè¾¹ç¼˜çš„çªå‡ºéƒ¨  
 	//
-
-	////Æ½»¬´¦Àí
+	Mat dst2;
+	dst2 = thinImage(img);
+	////å¹³æ»‘å¤„ç†
 	//imageblur(img, dst, Size(10, 10), thresValue);
-	
-	//¶şÖµ»¯µÄÍ¼Ïñ
+	imshow("ã€æ•ˆæœå›¾ã€‘è†¨èƒ€æ“ä½œ", dst);
+	//äºŒå€¼åŒ–çš„å›¾åƒ
 	cvNamedWindow("Threshold", 0);
 	cvShowImage("Threshold", src);
 
@@ -1234,7 +346,8 @@ int main(int argc, char* argv[])
 
 
 
-	//FillInternalContours(src, 20);//ÂÖÀªÌî³ä
+
+	//FillInternalContours(src, 20);//è½®å»“å¡«å……
 	//cvNamedWindow("Contours");
 	//cvShowImage("Contours", src);
 
@@ -1247,9 +360,8 @@ int main(int argc, char* argv[])
 
 
 
-
-	//¶¯Ì¬´´½¨Ò»¸ö³¤¶ÈÎªsizeof(char) * src->width * src->heightµÄ×Ö·ûÊı×é
-	//²¢ÇÒ³õÊ¼»¯°ÑÊı×éÔªËØ¶¼ÉèÖÃÎª0
+	//åŠ¨æ€åˆ›å»ºä¸€ä¸ªé•¿åº¦ä¸ºsizeof(char) * src->width * src->heightçš„å­—ç¬¦æ•°ç»„
+	//å¹¶ä¸”åˆå§‹åŒ–æŠŠæ•°ç»„å…ƒç´ éƒ½è®¾ç½®ä¸º0
 	unsigned char* imagedata;
 	imagedata = new uchar[sizeof(char) * src->width * src->height]();
 	
@@ -1264,20 +376,20 @@ int main(int argc, char* argv[])
 
 
 
-	//----------------------------Ï¸»¯-----------------------------------------
+	//----------------------------ç»†åŒ–-----------------------------------------
 
-	//¾­¹ıÔ¤´¦ÀíºóµÃµ½´ıÏ¸»¯µÄÍ¼ÏñÊÇ0¡¢1¶şÖµÍ¼Ïñ¡£
+	//ç»è¿‡é¢„å¤„ç†åå¾—åˆ°å¾…ç»†åŒ–çš„å›¾åƒæ˜¯0ã€1äºŒå€¼å›¾åƒã€‚
 
-	//Ï¸»¯Ò»´Î£¬ºÍÏ¸»¯¶à´Î£¬ÓÉÓÚË÷Òı±í²»±ä£¬Ã¿´ÎÏ¸»¯Ğ§¹û¶¼Ò»Ñù£¬Ïë²ÉÓÃ¶à´ÎÏ¸»¯ÎŞ·¨Ïû³ıÃ«´Ì
+	//ç»†åŒ–ä¸€æ¬¡ï¼Œå’Œç»†åŒ–å¤šæ¬¡ï¼Œç”±äºç´¢å¼•è¡¨ä¸å˜ï¼Œæ¯æ¬¡ç»†åŒ–æ•ˆæœéƒ½ä¸€æ ·ï¼Œæƒ³é‡‡ç”¨å¤šæ¬¡ç»†åŒ–æ— æ³•æ¶ˆé™¤æ¯›åˆº
 	int flag = 0;
 	scanf("%d", &flag);
 	switch (flag)
 	{
 	case 0:
-		//-----------------------------Ô¤´¦Àí0/1»¯-------------------------------------
+		//-----------------------------é¢„å¤„ç†0/1åŒ–-------------------------------------
 		/*
-		½«imagedataÖ¸ÏòµÄÓëÔ­Í¼Ïñ´óĞ¡Ò»ÏÂµÄÊı×é¿Õ¼ä½øĞĞ0»ò1¸³Öµ
-		¶şÖµÍ¼ÓĞÔ­À´µÄ0»ò255----->------0»ò1
+		å°†imagedataæŒ‡å‘çš„ä¸åŸå›¾åƒå¤§å°ä¸€ä¸‹çš„æ•°ç»„ç©ºé—´è¿›è¡Œ0æˆ–1èµ‹å€¼
+		äºŒå€¼å›¾æœ‰åŸæ¥çš„0æˆ–255----->------0æˆ–1
 		*/
 
 		
@@ -1286,58 +398,66 @@ int main(int argc, char* argv[])
 		for (y = 0; y<src->height; y++)
 		{
 			/*
-			widthStep±íÊ¾´æ´¢Ò»ĞĞÏñËØĞèÒªµÄ×Ö½ÚÊı
-			Æ«ÒÆµ½µÚyĞĞ
+			widthStepè¡¨ç¤ºå­˜å‚¨ä¸€è¡Œåƒç´ éœ€è¦çš„å­—èŠ‚æ•°
+			åç§»åˆ°ç¬¬yè¡Œ
 			*/
 			unsigned char* ptr = (unsigned char*)(src->imageData + y*src->widthStep);
 
 			for (x = 0; x<src->width; x++)
 			{
 				/*
-				ÅĞ¶ÏµÚyĞĞµÚxÁĞµÄÔªËØÖµÊÇ·ñ´óÓÚ0
-				´óÓÚ0Ê±½«Êı×é¶ÔÓ¦µÄÎ»ÖÃÔªËØÉèÖÃÎª1
-				²»´óÓÚ0ÔòÉèÖÃÎª0
+				åˆ¤æ–­ç¬¬yè¡Œç¬¬xåˆ—çš„å…ƒç´ å€¼æ˜¯å¦å¤§äº0
+				å¤§äº0æ—¶å°†æ•°ç»„å¯¹åº”çš„ä½ç½®å…ƒç´ è®¾ç½®ä¸º1
+				ä¸å¤§äº0åˆ™è®¾ç½®ä¸º0
 
-				imagedataÊı×éÀïÃæ²»ÊÇ0¾ÍÊ±1
+				imagedataæ•°ç»„é‡Œé¢ä¸æ˜¯0å°±æ—¶1
 				*/
 				imagedata[y*src->width + x] = ptr[x] > 0 ? 1 : 0;
-				//¾­¹ıÔ¤´¦ÀíºóµÃµ½´ıÏ¸»¯µÄÍ¼ÏñÊÇ0¡¢1¶şÖµÍ¼Ïñ¡£
+				//ç»è¿‡é¢„å¤„ç†åå¾—åˆ°å¾…ç»†åŒ–çš„å›¾åƒæ˜¯0ã€1äºŒå€¼å›¾åƒã€‚
 			}
 		}
 
 		ThiningDIBSkeleton(imagedata, src->width, src->height);
-		//--------------------¶ÔÏ¸»¯ºóµÄ0/1Í¼¶şÖµ»¯(0/255)-----------------------------
+		//--------------------å¯¹ç»†åŒ–åçš„0/1å›¾äºŒå€¼åŒ–(0/255)-----------------------------
 		/*
-		½«ptrÖ¸ÏòµÄÓëÔ­Í¼Ïñ´óĞ¡Ò»ÏÂµÄÊı×é¿Õ¼ä½øĞĞ0»ò255¸³Öµ
+		å°†ptræŒ‡å‘çš„ä¸åŸå›¾åƒå¤§å°ä¸€ä¸‹çš„æ•°ç»„ç©ºé—´è¿›è¡Œ0æˆ–255èµ‹å€¼
 		*/
 		for (y = 0; y<src->height; y++)
 		{
 			/*
-			widthStep±íÊ¾´æ´¢Ò»ĞĞÏñËØĞèÒªµÄ×Ö½ÚÊı
-			Æ«ÒÆµ½µÚyĞĞ
+			widthStepè¡¨ç¤ºå­˜å‚¨ä¸€è¡Œåƒç´ éœ€è¦çš„å­—èŠ‚æ•°
+			åç§»åˆ°ç¬¬yè¡Œ
 			*/
 			unsigned char* ptr = (unsigned char*)(src->imageData + y*src->widthStep);
 
-			for (x = 0; x<src->width; x++)//width:´Ó×óµ½ÓÒ
+			for (x = 0; x<src->width; x++)//width:ä»å·¦åˆ°å³
 			{
 				/*
-				ÅĞ¶ÏµÚyĞĞµÚxÁĞµÄÔªËØÖµÊÇ·ñ´óÓÚ0
-				´óÓÚ0Ê±½«Êı×é¶ÔÓ¦µÄÎ»ÖÃÔªËØÉèÖÃÎª1
-				²»´óÓÚ0ÔòÉèÖÃÎª0
-
-				ptrÖ¸ÏòµÄ¿Õ¼äµÄÖµ²»ÊÇ0¾ÍÊÇ255
-				Ò²¾ÍÊÇÏ¸»¯Ö®ºóÔÙ´Î±äÎª¶şÖµÍ¼
+				åˆ¤æ–­ç¬¬yè¡Œç¬¬xåˆ—çš„å…ƒç´ å€¼æ˜¯å¦å¤§äº0
+				å¤§äº0æ—¶å°†æ•°ç»„å¯¹åº”çš„ä½ç½®å…ƒç´ è®¾ç½®ä¸º1
+				ä¸å¤§äº0åˆ™è®¾ç½®ä¸º0
+cannyè¾¹ç¼˜æ£€æµ‹
+				ptræŒ‡å‘çš„ç©ºé—´çš„å€¼ä¸æ˜¯0å°±æ˜¯255
+				ä¹Ÿå°±æ˜¯ç»†åŒ–ä¹‹åå†æ¬¡å˜ä¸ºäºŒå€¼å›¾
 				*/
 				ptr[x] = imagedata[y*src->width + x]>0 ? 255 : 0;
 			}
 
 		}
+
 		//-------------------------------------------------------------------------
 		//ZhangThinning(src->width, src->height, (unsigned char *)src->imageData);
+		//blur(img, dst, Size(7, 7));
+		delete_jut(img, dst, 1.5, 1.5, 0);//å»é™¤äºŒå€¼å›¾åƒè¾¹ç¼˜çš„çªå‡ºéƒ¨  
+		imageblur(img, dst, Size(10, 10), thresValue);
+		
+
 		break;
 	case 1:
 		ZhangThinning(src->width, src->height, (unsigned char *)src->imageData);
+		
 		break;
+		
 	case 2:
 		//ThinnerHilditch((unsigned char *)src->imageData, src->width, src->height);
 		//ThinnerPavlidis((unsigned char *)src->imageData, src->width, src->height);
@@ -1351,9 +471,9 @@ int main(int argc, char* argv[])
 	
 
 
-
-
-	
+	dst2 = dst2 * 255;
+	namedWindow("dst2", CV_WINDOW_AUTOSIZE);
+	imshow("dst2-zhang", dst2);
 
 	cvNamedWindow("Skeleton", 0);
 	cvShowImage("Skeleton", src);
