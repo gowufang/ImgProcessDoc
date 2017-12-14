@@ -7,7 +7,7 @@ d:\0mse1\0fromgit\imgprocessdoc\1202thinningimg\1202thinningimg\thinning.h(66): 
 d:\0mse1\0fromgit\imgprocessdoc\1202thinningimg\1202thinningimg\thinning.h(128): warning C4554: “&”: 检查运算符优先级可能存在的错误；使用圆括号阐明优先级
 d:\0mse1\0fromgit\imgprocessdoc\1202thinningimg\1202thinningimg\thinning.h(131): warning C4554: “&”: 检查运算符优先级可能存在的错误；使用圆括号阐明优先级
 d:\0mse1\0fromgit\imgprocessdoc\1202thinningimg\1202thinningimg\thinningalgorithm.h(733): warning C4244: “=”: 从“short”转换到“char”，可能丢失数据
-d:\0mse1\0fromgit\imgprocessdoc\1202thinningimg\1202thinningimg\thinningimg.cpp(30): warning C4101: “threshold”: 未引用的局部变量
-d:\0mse1\0fromgit\imgprocessdoc\1202thinningimg\1202thinningimg\thinningimg.cpp(451): warning C4244: “参数”: 从“double”转换到“int”，可能丢失数据
+d:\0mse1\0fromgit\imgprocessdoc\1202thinningimg\1202thinningimg\morphofeatures.h(113): warning C4267: “参数”: 从“size_t”转换到“int”，可能丢失数据
+d:\0mse1\0fromgit\imgprocessdoc\1202thinningimg\1202thinningimg\thinningimg.cpp(31): warning C4101: “threshold”: 未引用的局部变量
   1202ThinningImg.vcxproj -> D:\0Mse1\0fromGit\ImgProcessDoc\1202ThinningImg\x64\Debug\1202ThinningImg.exe
   1202ThinningImg.vcxproj -> D:\0Mse1\0fromGit\ImgProcessDoc\1202ThinningImg\x64\Debug\1202ThinningImg.pdb (Full PDB)

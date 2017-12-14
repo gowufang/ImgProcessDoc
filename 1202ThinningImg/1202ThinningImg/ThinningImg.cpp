@@ -14,7 +14,8 @@
 #include <opencv2/highgui/highgui.hpp>
 #include "ThresholdWithOtsu.h"
 #include "ThinningAlgorithm.h"
-
+#include "morphoFeatures.h"
+#include "ThinningSister.h"
 using namespace cv;
 
 
@@ -296,6 +297,7 @@ cv::Mat thinImage(const cv::Mat & src, const int maxIterations = -1)
 
 int main(int argc, char* argv[])
 {
+	int flag = 0;
 	//加载原图像
 	IplImage* src = cvLoadImage("06100018/00000113(226,653,352,791).jpg", 0);
 	
@@ -330,17 +332,25 @@ int main(int argc, char* argv[])
 
 	Mat img = cvarrToMat(src);
 	Mat dst = img;
+
+	/*test****************************************************/
+	imshow("Mat Img", dst);//得到的是二值化的图
+    /*test-end************************************************/
 	//delete_jut(img, dst, 1, 1, 0);//去除二值图像边缘的突出部  
-	//
-	Mat dst2;
-	dst2 = thinImage(img);
+	
+	//Mat dst2;
+	//dst2 = thinImage(img);
 	////平滑处理
 	//imageblur(img, dst, Size(10, 10), thresValue);
-	imshow("【效果图】膨胀操作", dst);
+	//imshow("【效果图】膨胀操作", dst2);
 	//二值化的图像
 	cvNamedWindow("Threshold", 0);
 	cvShowImage("Threshold", src);
 
+	//ThingSister
+	//Mat dst_thin = Xihua(img, arrayXihua);
+	Mat dst_thin=Xihua(dst, arrayXihua);
+	imshow("thinning_sister", dst_thin);
 
 
 
@@ -366,23 +376,24 @@ int main(int argc, char* argv[])
 	imagedata = new uchar[sizeof(char) * src->width * src->height]();
 	
 
-
-
-
+	//case 3 yongdao
+	Mat edges;
+	MorphoFeatures morpho;
+	Mat corners;
 
 
 	
 
 
 
-
+	scanf("%d", &flag);
 	//----------------------------细化-----------------------------------------
 
 	//经过预处理后得到待细化的图像是0、1二值图像。
 
 	//细化一次，和细化多次，由于索引表不变，每次细化效果都一样，想采用多次细化无法消除毛刺
-	int flag = 0;
-	scanf("%d", &flag);
+	
+	
 	switch (flag)
 	{
 	case 0:
@@ -448,8 +459,8 @@ canny边缘检测
 		//-------------------------------------------------------------------------
 		//ZhangThinning(src->width, src->height, (unsigned char *)src->imageData);
 		//blur(img, dst, Size(7, 7));
-		delete_jut(img, dst, 1.5, 1.5, 0);//去除二值图像边缘的突出部  
-		imageblur(img, dst, Size(10, 10), thresValue);
+		//delete_jut(img, dst, 3.5, 3.5, 0);//去除二值图像边缘的突出部  
+		//imageblur(img, dst, Size(10, 10), thresValue);
 		
 
 		break;
@@ -464,16 +475,32 @@ canny边缘检测
 		//ThinnerRosenfeld((unsigned char *)src->imageData, src->width, src->height);
 		//ThiningDIBSkeleton((unsigned char *)src->imageData, src->width, src->height);
 		break;
+	case 3:
+		//获取边沿,轮廓
+		
+		edges = morpho.getEdges(img);
+		imshow("边沿", edges);
+		//获取角点
+		morpho.setThreshold(-1);
+		
+		corners = morpho.getCorners(img);
+		morphologyEx(corners, corners, MORPH_TOPHAT, Mat());
+		threshold(corners, corners, 40, 255, THRESH_BINARY_INV);
+		//imshow("角点",corners);
+
+		//展示图片上的角点
+		morpho.drawOnImage(corners, img);
+		imshow("图片上的角点", img);
+		break;
+	case 4:
+		dst_thin= Xihua(img, arrayXihua);
+		imshow("thinning_sister", dst_thin);
+		break;
 	default:
 		break;
 	}
 	
-	
 
-
-	dst2 = dst2 * 255;
-	namedWindow("dst2", CV_WINDOW_AUTOSIZE);
-	imshow("dst2-zhang", dst2);
 
 	cvNamedWindow("Skeleton", 0);
 	cvShowImage("Skeleton", src);

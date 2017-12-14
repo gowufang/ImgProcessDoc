@@ -151,8 +151,10 @@
   <ItemGroup>
     <ClInclude Include="contours.h" />
     <ClInclude Include="DeleteJutAndSmooth.h" />
+    <ClInclude Include="morphoFeatures.h" />
     <ClInclude Include="Thinning.h" />
     <ClInclude Include="ThinningAlgorithm.h" />
+    <ClInclude Include="ThinningSister.h" />
     <ClInclude Include="ThresholdWithOtsu.h" />
     <ClInclude Include="zhangThinning.h" />
   </ItemGroup>
