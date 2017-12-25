@@ -1,0 +1,16 @@
+﻿  ThinningImg.cpp
+D:\opencv\build\include\opencv2/core/mat.hpp(1965): warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+D:\opencv\build\include\opencv2/core/persistence.hpp : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+D:\opencv\build\include\opencv2/core/utility.hpp : warning C4819: 该文件包含不能在当前代码页(936)中表示的字符。请将该文件保存为 Unicode 格式以防止数据丢失
+d:\0mse1\0fromgit\imgprocessdoc\1202thinningimg\1202thinningimg\Thinning.h(63): warning C4554: “&”: 检查运算符优先级可能存在的错误；使用圆括号阐明优先级
+d:\0mse1\0fromgit\imgprocessdoc\1202thinningimg\1202thinningimg\Thinning.h(66): warning C4554: “&”: 检查运算符优先级可能存在的错误；使用圆括号阐明优先级
+d:\0mse1\0fromgit\imgprocessdoc\1202thinningimg\1202thinningimg\Thinning.h(128): warning C4554: “&”: 检查运算符优先级可能存在的错误；使用圆括号阐明优先级
+d:\0mse1\0fromgit\imgprocessdoc\1202thinningimg\1202thinningimg\Thinning.h(131): warning C4554: “&”: 检查运算符优先级可能存在的错误；使用圆括号阐明优先级
+d:\0mse1\0fromgit\imgprocessdoc\1202thinningimg\1202thinningimg\ThinningAlgorithm.h(733): warning C4244: “=”: 从“short”转换到“char”，可能丢失数据
+d:\0mse1\0fromgit\imgprocessdoc\1202thinningimg\1202thinningimg\morphoFeatures.h(113): warning C4267: “参数”: 从“size_t”转换到“int”，可能丢失数据
+D:\opencv\build\include\opencv2/objdetect.hpp(127): error C2589: “(”:“::”右边的非法标记
+D:\opencv\build\include\opencv2/objdetect.hpp(127): error C2059: 语法错误:“::”
+ThinningImg.cpp(164): error C2572: “thinImage”: 重定义默认参数 : 参数 1
+  d:\0mse1\0fromgit\imgprocessdoc\1202thinningimg\1202thinningimg\zhangThinning.h(7): note: 参见“thinImage”的声明
+ThinningImg.cpp(165): error C2084: 函数“cv::Mat thinImage(const cv::Mat &,const int)”已有主体
+  d:\0mse1\0fromgit\imgprocessdoc\1202thinningimg\1202thinningimg\zhangThinning.h(7): note: 参见“thinImage”的前一个定义

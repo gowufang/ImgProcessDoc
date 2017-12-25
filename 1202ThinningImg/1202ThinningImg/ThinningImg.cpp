@@ -16,6 +16,9 @@
 #include "ThinningAlgorithm.h"
 #include "morphoFeatures.h"
 #include "ThinningSister.h"
+#include <vector>   
+#include <iostream> 
+using namespace std;
 using namespace cv;
 
 
@@ -153,7 +156,7 @@ void imageblur(Mat& src, Mat& dst, Size size, int threshold)
 }
 
 
-
+//thinImage没有效果
 /**
  * @brief 对输入图像进行细化
   * @param src为输入图像,用cvThreshold函数处理过的8位灰度图像格式，元素中只有0与1,1代表有元素，0代表为空白
@@ -293,14 +296,217 @@ cv::Mat thinImage(const cv::Mat & src, const int maxIterations = -1)
 }
 
 
+IplImage * SmoothImage(char* strFileName)
+{
+	///////////////////////////************去掉独立噪声点*****************/////////////////////////////
+	//去孤立小点
+	const int NOISE_MAX_AREA = 100;//噪声点最大值，像素
+	const int CONTOUR_MAX_AREA = 800; //数字矩形一般为19*55
+
+	const int MAXCHARCOUNT = 20;  //最多矩形的个数
+	int intRealCharCount = 0;
+	IplImage* src;
+	IplImage* dst2;
+	IplImage* tmpsrc1;
+	IplImage* tmpsrc2;
+	IplImage* tmpsrc3;
+
+	if ((src = cvLoadImage(strFileName, 0)) != 0)
+	{
+
+		dst2 = cvCloneImage(src);
+		tmpsrc1 = cvCloneImage(src);
+		tmpsrc2 = cvCreateImage(cvGetSize(tmpsrc1), 8, 3);
+		cvZero(tmpsrc2);
+		tmpsrc3 = cvCreateImage(cvGetSize(tmpsrc1), 8, 3);
+		cvZero(tmpsrc3);
+		cvNot(tmpsrc3, tmpsrc3); //取反，使全白
+								 //去噪声
+		cvSmooth(tmpsrc1, tmpsrc1, CV_MEDIAN, 3, 3, 0);
+
+		//边缘检测
+		cvCanny(tmpsrc1, tmpsrc1, 50, 150, 3);
 
 
+
+		//画矩形
+		CvMemStorage* storage = cvCreateMemStorage(0);
+		CvSeq* contour = 0;
+		//二值化图像
+		cvThreshold(tmpsrc1, tmpsrc1, 1, 255, CV_THRESH_BINARY);
+
+		cvFindContours(tmpsrc1, storage, &contour, sizeof(CvContour), CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+		for (; contour; contour = contour->h_next)
+		{
+			CvRect r = ((CvContour*)contour)->rect;
+
+			if (r.width*r.height <NOISE_MAX_AREA)
+			{
+				CvScalar s1;
+				for (int i = r.y; i<r.y + r.height; i++)
+				{
+					for (int j = r.x; j<r.x + r.width; j++)
+					{
+						s1 = cvGet2D(tmpsrc3, i, j);
+						cvSet2D(dst2, i, j, s1);
+					}
+				}
+			}
+			if (r.height*r.width>CONTOUR_MAX_AREA)
+			{
+				cvRectangle(tmpsrc2, cvPoint(r.x, r.y), cvPoint(r.x + r.width, r.y + r.height), CV_RGB(255, 0, 0), 1, CV_AA, 0);
+			}
+		}
+
+		cvNamedWindow("dst", 1);
+		cvShowImage("dst", dst2);
+
+
+		cvSaveImage(strFileName, dst2);
+
+		cvReleaseImage(&tmpsrc1);
+		cvReleaseImage(&tmpsrc2);
+		cvReleaseImage(&tmpsrc3);
+		return src;
+	}
+	///////////////////////////************去掉独立噪声点*****************/////////////////////////////
+}
+
+//CheckMode: 0代表去除黑区域，1代表去除白区域; NeihborMode：0代表4邻域，1代表8邻域;  
+void RemoveSmallRegion(Mat& Src, Mat& Dst, int AreaLimit, int CheckMode, int NeihborMode)
+{
+	int RemoveCount = 0;       //记录除去的个数  
+							   //记录每个像素点检验状态的标签，0代表未检查，1代表正在检查,2代表检查不合格（需要反转颜色），3代表检查合格或不需检查  
+	Mat Pointlabel = Mat::zeros(Src.size(), CV_8UC1);
+
+	if (CheckMode == 1)
+	{
+		cout << "Mode: 去除小区域.";
+		for (int i = 0; i < Src.rows; ++i)
+		{
+			uchar* iData = Src.ptr<uchar>(i);
+			uchar* iLabel = Pointlabel.ptr<uchar>(i);
+			for (int j = 0; j < Src.cols; ++j)
+			{
+				if (iData[j] < 10)
+				{
+					iLabel[j] = 3;
+				}
+			}
+		}
+	}
+	else
+	{
+		cout << "Mode: 去除孔洞. ";
+		for (int i = 0; i < Src.rows; ++i)
+		{
+			uchar* iData = Src.ptr<uchar>(i);
+			uchar* iLabel = Pointlabel.ptr<uchar>(i);
+			for (int j = 0; j < Src.cols; ++j)
+			{
+				if (iData[j] > 10)
+				{
+					iLabel[j] = 3;
+				}
+			}
+		}
+	}
+
+	vector<Point2i> NeihborPos;  //记录邻域点位置  
+	NeihborPos.push_back(Point2i(-1, 0));
+	NeihborPos.push_back(Point2i(1, 0));
+	NeihborPos.push_back(Point2i(0, -1));
+	NeihborPos.push_back(Point2i(0, 1));
+	if (NeihborMode == 1)
+	{
+		cout << "Neighbor mode: 8邻域." << endl;
+		NeihborPos.push_back(Point2i(-1, -1));
+		NeihborPos.push_back(Point2i(-1, 1));
+		NeihborPos.push_back(Point2i(1, -1));
+		NeihborPos.push_back(Point2i(1, 1));
+	}
+	else cout << "Neighbor mode: 4邻域." << endl;
+	int NeihborCount = 4 + 4 * NeihborMode;
+	int CurrX = 0, CurrY = 0;
+	//开始检测  
+	for (int i = 0; i < Src.rows; ++i)
+	{
+		uchar* iLabel = Pointlabel.ptr<uchar>(i);
+		for (int j = 0; j < Src.cols; ++j)
+		{
+			if (iLabel[j] == 0)
+			{
+				//********开始该点处的检查**********  
+				vector<Point2i> GrowBuffer;                                      //堆栈，用于存储生长点  
+				GrowBuffer.push_back(Point2i(j, i));
+				Pointlabel.at<uchar>(i, j) = 1;
+				int CheckResult = 0;                                               //用于判断结果（是否超出大小），0为未超出，1为超出  
+
+				for (int z = 0; z<GrowBuffer.size(); z++)
+				{
+
+					for (int q = 0; q<NeihborCount; q++)                                      //检查四个邻域点  
+					{
+						CurrX = GrowBuffer.at(z).x + NeihborPos.at(q).x;
+						CurrY = GrowBuffer.at(z).y + NeihborPos.at(q).y;
+						if (CurrX >= 0 && CurrX<Src.cols&&CurrY >= 0 && CurrY<Src.rows)  //防止越界  
+						{
+							if (Pointlabel.at<uchar>(CurrY, CurrX) == 0)
+							{
+								GrowBuffer.push_back(Point2i(CurrX, CurrY));  //邻域点加入buffer  
+								Pointlabel.at<uchar>(CurrY, CurrX) = 1;           //更新邻域点的检查标签，避免重复检查  
+							}
+						}
+					}
+
+				}
+				if (GrowBuffer.size()>AreaLimit) CheckResult = 2;                 //判断结果（是否超出限定的大小），1为未超出，2为超出  
+				else { CheckResult = 1;   RemoveCount++; }
+				for (int z = 0; z<GrowBuffer.size(); z++)                         //更新Label记录  
+				{
+					CurrX = GrowBuffer.at(z).x;
+					CurrY = GrowBuffer.at(z).y;
+					Pointlabel.at<uchar>(CurrY, CurrX) += CheckResult;
+				}
+				//********结束该点处的检查**********  
+
+
+			}
+		}
+	}
+
+	CheckMode = 255 * (1 - CheckMode);
+	//开始反转面积过小的区域  
+	for (int i = 0; i < Src.rows; ++i)
+	{
+		uchar* iData = Src.ptr<uchar>(i);
+		uchar* iDstData = Dst.ptr<uchar>(i);
+		uchar* iLabel = Pointlabel.ptr<uchar>(i);
+		for (int j = 0; j < Src.cols; ++j)
+		{
+			if (iLabel[j] == 2)
+			{
+				iDstData[j] = CheckMode;
+			}
+			else if (iLabel[j] == 3)
+			{
+				iDstData[j] = iData[j];
+			}
+		}
+	}
+
+	cout << RemoveCount << " objects removed." << endl;
+}
 int main(int argc, char* argv[])
 {
-	int flag = 0;
+	int flag = 0;//flag默认为0
 	//加载原图像
-	IplImage* src = cvLoadImage("06100018/00000113(226,653,352,791).jpg", 0);
-	
+	IplImage* src = cvLoadImage("06100018/00000115(534,694,658,828).jpg", 0);
+	/*char * strFileName = "06100018/00000115(534,694,658,828).jpg";
+
+	IplImage* src = SmoothImage(strFileName);*/
+
+
 
 
 	//---------------------------预处理二值化------------------------------------
@@ -321,25 +527,26 @@ int main(int argc, char* argv[])
 	//blur(img, dst, Size(7, 7));
 	//GaussianBlur(img, dst, Size(5, 5), 0, 0);
 
-	
+
 	unsigned int thresValue = Otsu((unsigned char *)src->imageData, src->width, src->height, src->widthStep);
 
 	Thresholding((unsigned char *)src->imageData, src->width, src->height, src->widthStep,
 		thresValue);
 
+
+	
 	//Mat element = getStructuringElement(MORPH_RECT, Size(15, 15));
 	//erode(img, dst, element);
 
 	Mat img = cvarrToMat(src);
 	Mat dst = img;
 
-	/*test****************************************************/
-	imshow("Mat Img", dst);//得到的是二值化的图
-    /*test-end************************************************/
+	//threshold(img, img, 100, 255, CV_THRESH_OTSU);
 	//delete_jut(img, dst, 1, 1, 0);//去除二值图像边缘的突出部  
 	
 	//Mat dst2;
-	//dst2 = thinImage(img);
+	/*dst = thinImage(img);
+	imshow("thinImage", dst);*/
 	////平滑处理
 	//imageblur(img, dst, Size(10, 10), thresValue);
 	//imshow("【效果图】膨胀操作", dst2);
@@ -347,11 +554,25 @@ int main(int argc, char* argv[])
 	cvNamedWindow("Threshold", 0);
 	cvShowImage("Threshold", src);
 
+	RemoveSmallRegion(img, dst, 20, 1, 1);
+	RemoveSmallRegion(img, dst, 20, 0, 0);
+	cvNamedWindow("DeNoisy", 0);
+	cvShowImage("DeNoisy", src);
+	/*test thinning_sister*************************************/
+	//imshow("Mat Img", dst);//得到的是二值化的图
+						  
 	//ThingSister
 	//Mat dst_thin = Xihua(img, arrayXihua);
-	Mat dst_thin=Xihua(dst, arrayXihua);
-	imshow("thinning_sister", dst_thin);
-
+	//delete_jut(img, dst, 1, 1, 0);
+	//平滑处理
+	//imageblur(img, dst, Size(10, 10), thresValue);
+	Mat dst_thin;
+	/*Mat dst_thin=Xihua(dst, arrayXihua);
+	
+	
+	imshow("thinning_sister", dst_thin);*/
+	
+	/*test-end************************************************/
 
 
 
@@ -376,7 +597,7 @@ int main(int argc, char* argv[])
 	imagedata = new uchar[sizeof(char) * src->width * src->height]();
 	
 
-	//case 3 yongdao
+	//case 3 用到
 	Mat edges;
 	MorphoFeatures morpho;
 	Mat corners;
@@ -386,7 +607,8 @@ int main(int argc, char* argv[])
 
 
 
-	scanf("%d", &flag);
+	//scanf("%d", &flag);
+	flag = 4;
 	//----------------------------细化-----------------------------------------
 
 	//经过预处理后得到待细化的图像是0、1二值图像。
@@ -402,9 +624,6 @@ int main(int argc, char* argv[])
 		将imagedata指向的与原图像大小一下的数组空间进行0或1赋值
 		二值图有原来的0或255----->------0或1
 		*/
-
-		
-
 		int x, y;
 		for (y = 0; y<src->height; y++)
 		{
@@ -423,11 +642,14 @@ int main(int argc, char* argv[])
 
 				imagedata数组里面不是0就时1
 				*/
-				imagedata[y*src->width + x] = ptr[x] > 0 ? 1 : 0;
+				imagedata[y*src->width + x] = ptr[x] > 0 ? 0 : 1;
 				//经过预处理后得到待细化的图像是0、1二值图像。
 			}
 		}
-
+		//ThinnerRosenfeld((unsigned char *)src->imageData, src->width, src->height);
+		//ThinnerPavlidis((unsigned char *)src->imageData, src->width, src->height);
+		//ThinnerHilditch((unsigned char *)src->imageData, src->width, src->height);
+		//ZhangThinning(src->width, src->height, imagedata);
 		ThiningDIBSkeleton(imagedata, src->width, src->height);
 		//--------------------对细化后的0/1图二值化(0/255)-----------------------------
 		/*
@@ -451,11 +673,10 @@ canny边缘检测
 				ptr指向的空间的值不是0就是255
 				也就是细化之后再次变为二值图
 				*/
-				ptr[x] = imagedata[y*src->width + x]>0 ? 255 : 0;
+				ptr[x] = imagedata[y*src->width + x]>0 ? 0 : 255;
 			}
 
 		}
-
 		//-------------------------------------------------------------------------
 		//ZhangThinning(src->width, src->height, (unsigned char *)src->imageData);
 		//blur(img, dst, Size(7, 7));
@@ -466,14 +687,13 @@ canny边缘检测
 		break;
 	case 1:
 		ZhangThinning(src->width, src->height, (unsigned char *)src->imageData);
-		
 		break;
 		
 	case 2:
 		//ThinnerHilditch((unsigned char *)src->imageData, src->width, src->height);
 		//ThinnerPavlidis((unsigned char *)src->imageData, src->width, src->height);
 		//ThinnerRosenfeld((unsigned char *)src->imageData, src->width, src->height);
-		//ThiningDIBSkeleton((unsigned char *)src->imageData, src->width, src->height);
+		ThiningDIBSkeleton((unsigned char *)src->imageData, src->width, src->height);
 		break;
 	case 3:
 		//获取边沿,轮廓

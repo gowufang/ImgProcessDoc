@@ -26,9 +26,6 @@
     <ClInclude Include="contours.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="zhangThinning.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="ThresholdWithOtsu.h">
       <Filter>头文件</Filter>
     </ClInclude>

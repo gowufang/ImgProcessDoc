@@ -110,11 +110,11 @@ BOOL Thresholding(unsigned char *pImageData, int nWidth, int nHeight, int nWidth
 		{
 			if (pLine[i] >= nThreshold)
 			{
-				pLine[i] = 0x00;
+				pLine[i] = 0xff;
 			}
 			else
 			{
-				pLine[i] = 0xff;
+				pLine[i] = 0x00;
 			}
 		}
 	}
